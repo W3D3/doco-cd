@@ -1,7 +1,7 @@
 GO_BIN?=$(shell pwd)/.bin
 BINARY_DIR=bin
 BINARY_NAME=doco-cd
-.PHONY: test test-verbose test-coverage test-run build fmt lint update update-all download tools compose-up compose-down wiki-tools wiki-build wiki-serve wiki-version-publish
+.PHONY: test test-verbose test-coverage test-run build fmt lint update update-all download tools compose-up compose-down generate-schema wiki-tools wiki-build wiki-serve wiki-version-publish
 
 ifneq (,$(wildcard ./.env))
     include .env
@@ -93,6 +93,10 @@ webhook:
   		-H "X-GitHub-Event: push" \
   		--data @cmd/doco-cd/testdata/github_payload.json \
   		http://localhost/v1/webhook
+
+generate-schema:
+	@echo "Generating JSON Schema from Go structs..."
+	@go run ./cmd/schema-gen
 
 wiki-tools:
 	python3 -m venv .venv-wiki

@@ -8,6 +8,7 @@
 # Binaries for programs and plugins
 bin/
 .bin/
+schema-gen
 *.exe
 *.exe~
 *.dll
