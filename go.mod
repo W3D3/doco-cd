@@ -43,6 +43,7 @@ require (
 	github.com/avast/retry-go/v5 v5.0.0
 	github.com/bitwarden/sdk-go/v2 v2.0.0
 	github.com/docker/compose/v5 v5.1.3
+	github.com/invopop/jsonschema v0.13.0
 	github.com/jmespath/go-jmespath v0.4.1-0.20220621161143-b0104c826a24
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/prometheus/common v0.67.5
@@ -176,7 +177,6 @@ require (
 	github.com/in-toto/in-toto-golang v0.10.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/inhies/go-bytesize v0.0.0-20220417184213-4913239db9cf // indirect
-	github.com/invopop/jsonschema v0.13.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jonboulle/clockwork v0.5.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect

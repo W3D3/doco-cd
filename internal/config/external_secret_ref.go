@@ -119,7 +119,7 @@ func (ExternalSecretRef) JSONSchema() *jsonschema.Schema {
 	remoteRefSchema := &jsonschema.Schema{
 		Type:                 "object",
 		Description:          "Key/value pairs substituted into the store's URL, headers, body and json_path templates.",
-		AdditionalProperties: &jsonschema.Schema{},
+		AdditionalProperties: jsonschema.TrueSchema,
 	}
 
 	props := jsonschema.NewProperties()
