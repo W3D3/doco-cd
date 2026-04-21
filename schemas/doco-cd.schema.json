@@ -1,0 +1,252 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/kimdre/doco-cd/main/schemas/doco-cd.schema.json",
+  "title": "doco-cd deployment configuration",
+  "description": "Schema for the doco-cd deployment configuration file (.doco-cd.yaml / .doco-cd.yml)",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the Docker Compose deployment / stack. Required unless auto_discover is enabled."
+    },
+    "repository_url": {
+      "type": "string",
+      "description": "HTTP(S) or SSH URL of the Git repository to deploy from. Defaults to the repository that triggered the webhook.",
+      "examples": [
+        "https://github.com/example/my-app.git",
+        "git@github.com:example/my-app.git",
+        "ssh://git@github.com/example/my-app.git"
+      ]
+    },
+    "webhook_filter": {
+      "type": "string",
+      "description": "Regular expression to whitelist deployment triggers based on the webhook event payload (e.g., branch or tag reference).",
+      "examples": [
+        "^refs/heads/main$",
+        "^refs/tags/v[0-9]+\\.[0-9]+\\.[0-9]+$"
+      ]
+    },
+    "reference": {
+      "type": "string",
+      "description": "Git reference to deploy (branch, tag, or full ref). Defaults to 'refs/heads/main'.",
+      "examples": [
+        "refs/heads/main",
+        "main",
+        "refs/tags/v1.0.0",
+        "v1.0.0"
+      ]
+    },
+    "working_dir": {
+      "type": "string",
+      "description": "Working directory for the deployment, relative to the repository root. Defaults to '.'.",
+      "default": "."
+    },
+    "compose_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of Docker Compose files to use. Defaults to standard Compose file names.",
+      "default": ["compose.yaml", "compose.yml", "docker-compose.yml", "docker-compose.yaml"],
+      "examples": [
+        ["docker-compose.yml"],
+        ["compose.yaml", "compose.override.yaml"]
+      ]
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Map of environment variables to use for variable interpolation in the Compose files."
+    },
+    "env_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of dotenv files to use for variable interpolation. Defaults to ['.env'].",
+      "default": [".env"]
+    },
+    "remove_orphans": {
+      "type": "boolean",
+      "description": "Remove containers for services not defined in the Compose file. Defaults to true.",
+      "default": true
+    },
+    "prune_images": {
+      "type": "boolean",
+      "description": "Remove images that are no longer used after deployment. Defaults to true.",
+      "default": true
+    },
+    "force_recreate": {
+      "type": "boolean",
+      "description": "Force recreation of containers even if the configuration has not changed. Defaults to false.",
+      "default": false
+    },
+    "force_image_pull": {
+      "type": "boolean",
+      "description": "Always pull the latest version of the specified image tags if a newer version is available. Defaults to false.",
+      "default": false
+    },
+    "timeout": {
+      "type": "integer",
+      "description": "Time in seconds to wait for the deployment to finish before timing out. Defaults to 180.",
+      "default": 180,
+      "minimum": 1
+    },
+    "build_opts": {
+      "type": "object",
+      "description": "Build options for the deployment.",
+      "properties": {
+        "force_image_pull": {
+          "type": "boolean",
+          "description": "Always attempt to pull a newer version of the base image during build. Defaults to false.",
+          "default": false
+        },
+        "quiet": {
+          "type": "boolean",
+          "description": "Suppress the build output. Defaults to false.",
+          "default": false
+        },
+        "args": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Map of build-time arguments to pass to the build process."
+        },
+        "no_cache": {
+          "type": "boolean",
+          "description": "Disable the use of the cache when building images. Defaults to false.",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "destroy": {
+      "type": "boolean",
+      "description": "Remove the deployment and all its resources from the Docker host. Defaults to false.",
+      "default": false
+    },
+    "destroy_opts": {
+      "type": "object",
+      "description": "Options for destroying the deployment.",
+      "properties": {
+        "remove_volumes": {
+          "type": "boolean",
+          "description": "Remove the volumes used by the deployment. Defaults to true.",
+          "default": true
+        },
+        "remove_images": {
+          "type": "boolean",
+          "description": "Remove the images used by the deployment (not supported in Docker Swarm mode). Defaults to true.",
+          "default": true
+        },
+        "remove_dir": {
+          "type": "boolean",
+          "description": "Remove the repository directory after the deployment is destroyed. Defaults to true.",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "profiles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of Docker Compose profiles to activate for the deployment.",
+      "default": [],
+      "examples": [
+        ["prod"],
+        ["dev", "monitoring"]
+      ]
+    },
+    "external_secrets": {
+      "type": "object",
+      "description": "Maps environment variable names to external secret references for secret providers (e.g. Bitwarden, 1Password, AWS Secrets Manager, webhook store).",
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "string",
+            "description": "Legacy scalar reference used by non-webhook secret providers (e.g. a UUID or secret ID)."
+          },
+          {
+            "$ref": "#/definitions/externalSecretRef"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "DB_PASSWORD": "138e3a97-ed58-431c-b366-b35500663411"
+        },
+        {
+          "DB_PASSWORD": {
+            "store_ref": "bitwarden-login",
+            "remote_ref": {
+              "key": "138e3a97-ed58-431c-b366-b35500663411",
+              "property": "password"
+            }
+          }
+        }
+      ]
+    },
+    "auto_discover": {
+      "type": "boolean",
+      "description": "Enable autodiscovery of services to deploy by scanning subdirectories of the working directory for Docker Compose files. Defaults to false.",
+      "default": false
+    },
+    "auto_discover_opts": {
+      "type": "object",
+      "description": "Options for the autodiscovery feature.",
+      "properties": {
+        "depth": {
+          "type": "integer",
+          "description": "Maximum depth of subdirectories to scan for Docker Compose files. Defaults to 0 (unlimited).",
+          "default": 0,
+          "minimum": 0
+        },
+        "delete": {
+          "type": "boolean",
+          "description": "Remove obsolete auto-discovered deployments that are no longer present in the repository. Defaults to true.",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [],
+  "if": {
+    "not": {
+      "properties": {
+        "auto_discover": {
+          "const": true
+        }
+      },
+      "required": ["auto_discover"]
+    }
+  },
+  "then": {
+    "required": ["name"]
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "externalSecretRef": {
+      "type": "object",
+      "description": "Structured external secret reference used by the webhook secret provider.",
+      "properties": {
+        "store_ref": {
+          "type": "string",
+          "description": "Name of the global webhook secret store to use, as defined in the store YAML file."
+        },
+        "remote_ref": {
+          "type": "object",
+          "description": "Key/value pairs substituted into the store's URL, headers, body and json_path templates at resolution time.",
+          "additionalProperties": true
+        }
+      },
+      "required": ["store_ref"],
+      "additionalProperties": false
+    }
+  }
+}
