@@ -21,6 +21,19 @@ The deployment configuration file must be placed in the root/base directory of y
 - `.doco-cd.yaml`
 - `.doco-cd.yml`
 
+A [JSON Schema](https://json-schema.org/) for static validation of the deployment configuration file is available at:
+
+```
+https://raw.githubusercontent.com/kimdre/doco-cd/main/schemas/doco-cd.schema.json
+```
+
+You can reference it directly in your YAML file to get IDE autocompletion and validation in editors that support YAML schemas (e.g. VS Code with the [YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)):
+
+```yaml title=".doco-cd.yml"
+# yaml-language-server: $schema=https://raw.githubusercontent.com/kimdre/doco-cd/main/schemas/doco-cd.schema.json
+name: my-app
+```
+
 If you use polling, you can also specify inline deployment configurations in the poll configuration file.
 See [Poll Settings](Poll-Settings.md) and this [example](Poll-Settings.md#inline-deploy-configs) for more information.
 
