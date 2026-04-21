@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/invopop/jsonschema"
 	"go.yaml.in/yaml/v3"
 )
 
@@ -108,6 +109,38 @@ func hasYAMLKey(node *yaml.Node, key string) bool {
 	}
 
 	return false
+}
+
+// JSONSchema returns a JSON Schema for ExternalSecretRef that accepts either a plain
+// string (legacy scalar form used by non-webhook providers) or a structured object
+// with store_ref / remote_ref fields (used by the webhook provider).
+func (ExternalSecretRef) JSONSchema() *jsonschema.Schema {
+	storeRefSchema := &jsonschema.Schema{Type: "string", Description: "Name of the global webhook secret store to use."}
+	remoteRefSchema := &jsonschema.Schema{
+		Type:                 "object",
+		Description:          "Key/value pairs substituted into the store's URL, headers, body and json_path templates.",
+		AdditionalProperties: &jsonschema.Schema{},
+	}
+
+	props := jsonschema.NewProperties()
+	props.Set("store_ref", storeRefSchema)
+	props.Set("remote_ref", remoteRefSchema)
+
+	return &jsonschema.Schema{
+		OneOf: []*jsonschema.Schema{
+			{
+				Type:        "string",
+				Description: "Legacy scalar reference used by non-webhook secret providers (e.g. a UUID or secret ID).",
+			},
+			{
+				Type:                 "object",
+				Description:          "Structured reference used by the webhook secret provider.",
+				Properties:           props,
+				Required:             []string{"store_ref"},
+				AdditionalProperties: jsonschema.FalseSchema,
+			},
+		},
+	}
 }
 
 // EncodeExternalSecretRefs converts typed references to provider input values.
