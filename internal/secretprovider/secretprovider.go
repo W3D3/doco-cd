@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	onepassword "github.com/kimdre/doco-cd/internal/secretprovider/1password"
 	"github.com/kimdre/doco-cd/internal/secretprovider/awssecretsmanager"
@@ -50,14 +51,18 @@ var ErrUnknownProvider = errors.New("unknown secret provider")
 // Initialize initializes the secret provider based on the provided configuration.
 // The returned provider is wrapped with retry logic to handle transient
 // rate-limit errors (HTTP 429) from upstream APIs.
+// For the 1Password provider, an optional TTL-based in-memory cache is applied
+// on top of the retry wrapper when SECRET_PROVIDER_CACHE_TTL is set to a
+// positive duration.
 func Initialize(ctx context.Context, provider, version string) (SecretProvider, error) {
 	if provider == "" {
 		return nil, nil
 	}
 
 	var (
-		p   SecretProvider
-		err error
+		p        SecretProvider
+		err      error
+		cacheTTL time.Duration
 	)
 
 	switch provider {
@@ -82,6 +87,7 @@ func Initialize(ctx context.Context, provider, version string) (SecretProvider, 
 		}
 
 		p, err = onepassword.NewProvider(ctx, cfg.AccessToken, version)
+		cacheTTL = cfg.CacheTTL
 	case infisical.Name:
 		cfg, cfgErr := infisical.GetConfig()
 		if cfgErr != nil {
@@ -116,5 +122,11 @@ func Initialize(ctx context.Context, provider, version string) (SecretProvider, 
 		return nil, err
 	}
 
-	return NewRetryingSecretProvider(p), nil
+	retrying := NewRetryingSecretProvider(p)
+
+	if cacheTTL > 0 {
+		return NewCachingSecretProvider(retrying, cacheTTL), nil
+	}
+
+	return retrying, nil
 }
